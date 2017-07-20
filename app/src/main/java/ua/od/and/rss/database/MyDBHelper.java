@@ -2,8 +2,11 @@ package ua.od.and.rss.database;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import java.util.ArrayList;
 
 import ua.od.and.rss.classes.OneNews;
 import ua.od.and.rss.classes.RSS;
@@ -20,8 +23,8 @@ public class MyDBHelper extends SQLiteOpenHelper
     public void onCreate(SQLiteDatabase db)
     {
         String sql = "CREATE TABLE '" + DBContract.Tables.RSS_LIST + "' ( `" + DBContract.RSS_list.ID_COLUMN + "` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT " +
-                "" + "" + "UNIQUE, `" + DBContract.RSS_list.LINK_COLUMN + "` TEXT NOT NULL, `" + DBContract.RSS_list.NAME_COLUMN + "`" + " TEXT NOT NULL " +
-                "UNIQUE )";
+                "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "UNIQUE, `" + DBContract.RSS_list.LINK_COLUMN + "` TEXT NOT NULL, `" + DBContract.RSS_list
+                .NAME_COLUMN + "`" + " " + "TEXT NOT" + " NULL" + " " + "UNIQUE )";
         db.execSQL(sql);
 
         sql = "CREATE TABLE '" + DBContract.Tables.RSS_DATA + "' ( `" + DBContract.RSS_data.ID_COLUMN + "` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT" + " "
@@ -71,4 +74,37 @@ public class MyDBHelper extends SQLiteOpenHelper
         contentValues.put(DBContract.RSS_data.DATE_COLUMN, oneNews.getDate());
         return db.insert(DBContract.Tables.RSS_DATA, null, contentValues);
     }
+
+    public ArrayList<String> getAllRRS(SQLiteDatabase db)
+    {
+        String[] name = {DBContract.RSS_list.NAME_COLUMN};
+        Cursor cursor = db.query(DBContract.Tables.RSS_LIST, name, null, null, null, null, null);
+        int nameColumnIndex = cursor.getColumnIndex(DBContract.RSS_list.NAME_COLUMN);
+        ArrayList<String> list = new ArrayList<>();
+        while (cursor.moveToNext())
+        {
+            list.add(cursor.getString(nameColumnIndex));
+        }
+        return list;
+    }
+
+    public ArrayList<OneNews> getAllNewsFromRss(SQLiteDatabase db, long rssId)
+    {
+        String[] columns = {DBContract.RSS_data.LIST_ID_COLUMN, DBContract.RSS_data.TITLE_COLUMN, DBContract.RSS_data.LINK_COLUMN, DBContract.RSS_data
+                .DESCRIPTION_COLUMN};
+        String where = DBContract.RSS_data.LIST_ID_COLUMN + " = " + rssId;
+        Cursor cursor = db.query(DBContract.Tables.RSS_DATA, columns, where, null, null, null, null);
+        int listIdColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.LIST_ID_COLUMN);
+        int titleColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.TITLE_COLUMN);
+        int linkColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.LINK_COLUMN);
+        int descriptionColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.DESCRIPTION_COLUMN);
+        ArrayList<OneNews> list = new ArrayList<>();
+        while (cursor.moveToNext())
+        {
+            list.add(new OneNews(cursor.getLong(listIdColumnIndex), cursor.getString(titleColumnIndex), cursor.getString(linkColumnIndex), cursor.getString
+                    (descriptionColumnIndex), "data"));
+        }
+        return list;
+    }
+
 }
