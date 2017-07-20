@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">RSS</string>
+    <string-array name="data">
+        <item>Картоха от батьки!</item>
+        <item>Качан капусты</item>
+        <item>Оранжевая морковка</item>
+        <item>Помидор, он же томат</item>
+        <item>Буряк</item>
+        <item>Плохой человек - редиска</item>
+        <item>Укроп</item>
+        <item>Злобный укроп</item>
+        <item>Кабачек</item>
+        <item>Перец</item>
+        <item>Лада седан! Баклажан!</item>
+        <item>Хрень непонятная</item>
+    </string-array>
+    <string name="title_activity_second">SecondActivity</string>
+    <string name="action_refresh">Обновить</string>
+    <string name="action_rss_list">Список RSS</string>
+    <string name="action_clear_all">Очистить все</string>
+
+</resources>
