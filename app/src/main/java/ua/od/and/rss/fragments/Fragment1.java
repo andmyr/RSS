@@ -39,7 +39,7 @@ public class Fragment1 extends ListFragment
         ArrayList<RSS> rssList = myDBHelper.getAllRRS(db);
         if (rssList.size() < 1)
         {
-            Toast.makeText(getContext(), "Добавьте хотя бы один RSS-лист", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Добавьте хотя бы один RSS-лист\n или обновите уже существующие", Toast.LENGTH_SHORT).show();
             newsList = myDBHelper.getAllNewsFromRss(db, 0);
         } else
         {
