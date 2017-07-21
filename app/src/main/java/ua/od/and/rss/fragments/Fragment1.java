@@ -65,7 +65,9 @@ public class Fragment1 extends ListFragment
         SQLiteDatabase db = myDBHelper.getReadableDatabase();
         newsList = myDBHelper.getAllNewsFromRss(db, rssId);
         adapter = new MyAdapter(newsList, getContext());
-        adapter.notifyDataSetChanged();
+        getListView().setAdapter(adapter);
+        /*adapter.notifyDataSetChanged();
+        getListView().invalidateViews();*/
     }
 
     public interface OnSelectedButtonListener

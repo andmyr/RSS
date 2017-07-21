@@ -153,9 +153,7 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
     protected void onResume()
     {
         super.onResume();
-
         //Проверка на первый запуск. Заполняем источниками RSS
-
         if (prefs.getBoolean("firstrun", true))
         {
             MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
@@ -165,6 +163,8 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
             myDBHelper.addRSS(db, new RSS("https://3dnews.ru/news/rss/", "https://3dnews.ru/news/rss/"));
 
             prefs.edit().putBoolean("firstrun", false).commit();
+
+            callRefresh(currentRssId);
         }
     }
 
