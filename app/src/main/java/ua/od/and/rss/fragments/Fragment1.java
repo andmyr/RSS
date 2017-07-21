@@ -59,11 +59,12 @@ public class Fragment1 extends ListFragment
         listener.onButtonSelected(id1);
     }
 
-    public void refreshList()
+    public void refreshList(long rssId)
     {
         MyDBHelper myDBHelper = new MyDBHelper(getContext());
         SQLiteDatabase db = myDBHelper.getReadableDatabase();
-        newsList = myDBHelper.getAllNewsFromRss(db, 0);
+        newsList = myDBHelper.getAllNewsFromRss(db, rssId);
+        adapter = new MyAdapter(newsList, getContext());
         adapter.notifyDataSetChanged();
     }
 

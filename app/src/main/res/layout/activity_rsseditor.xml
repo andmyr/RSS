@@ -13,43 +13,12 @@
         android:layout_height="wrap_content"
         android:layout_weight="100"/>
 
-    <LinearLayout
+    <Button
+        android:id="@+id/btnAddRSS"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="horizontal">
+        android:text="@string/add_rss"/>
 
-        <Button
-            android:id="@+id/btnAddRSS"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Добавить RSS"/>
 
-        <Button
-            android:id="@+id/btnDeleteRSS"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Удалить RSS"/>
-    </LinearLayout>
-
-    <EditText
-        android:id="@+id/etRSSLink"
-        android:layout_width="368dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Введите адрес RSS ленты"
-        android:inputType="text"
-        android:text="http://nv.ua/xml/rss.html"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="16dp"/>
-
-    <Button
-        android:id="@+id/btnLoadRSS"
-        android:layout_width="368dp"
-        android:layout_height="wrap_content"
-        android:text="Загрузить ленту в базу"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="59dp"/>
 </LinearLayout>

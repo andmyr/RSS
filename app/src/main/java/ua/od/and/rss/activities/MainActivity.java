@@ -1,6 +1,7 @@
 package ua.od.and.rss.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
@@ -10,17 +11,26 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 import ua.od.and.rss.R;
 import ua.od.and.rss.Utils.NetStatus;
 import ua.od.and.rss.asynctasks.RetrieveFeedTask;
+import ua.od.and.rss.classes.RSS;
 import ua.od.and.rss.database.MyDBHelper;
 import ua.od.and.rss.fragments.Fragment1;
 import ua.od.and.rss.fragments.Fragment2;
 
+import static ua.od.and.rss.Utils.cons.FEED_EDITOR_ACTIVITY;
+
 
 public class MainActivity extends AppCompatActivity implements Fragment1.OnSelectedButtonListener
 {
+    SharedPreferences prefs = null;
     private boolean mIsDynamic;
+    private MyDBHelper myDBHelper;
+    private FragmentManager fragmentManager;
+    private long currentRssId = 0;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -35,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_wide);
 
+        prefs = getSharedPreferences("com.mycompany.myAppName", MODE_PRIVATE);
+
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment2 fragment2 = (Fragment2) fragmentManager.findFragmentById(R.id.fragment2);
         mIsDynamic = (fragment2 == null) || (!fragment2.isInLayout());
@@ -44,6 +56,14 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
             Fragment1 fragment1 = new Fragment1();
             ft.add(R.id.flFragmentContainer1, fragment1, "fragment1");
             ft.commit();
+        }
+
+        MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
+        SQLiteDatabase db = myDBHelper.getReadableDatabase();
+        ArrayList<RSS> rssList = myDBHelper.getAllRRS(db);
+        if (rssList.size() > 0)
+        {
+            currentRssId = rssList.get(0).getId();
         }
     }
 
@@ -64,20 +84,32 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
 
                 return true;
             case R.id.action_rss_list:
-                //Toast.makeText(this, "Заготовка под редактор списка RSS", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, FeedEditorActivity.class);
-                startActivityForResult(intent, 1);
+                startActivityForResult(intent, FEED_EDITOR_ACTIVITY);
+
                 return true;
             case R.id.action_clear_all:
-                MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
+                myDBHelper = new MyDBHelper(getApplicationContext());
                 SQLiteDatabase db = myDBHelper.getWritableDatabase();
                 myDBHelper.clearAll(db);
+                callRefresh(0l);
                 Toast.makeText(this, "Все удалено", Toast.LENGTH_SHORT).show();
-                //TODO Обновление списка новостей
+
+                return true;
+            case R.id.action_refresh_list:
+                callRefresh(currentRssId);
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void callRefresh(Long rssId)
+    {
+        fragmentManager = getSupportFragmentManager();
+        Fragment1 fragment1 = (Fragment1) fragmentManager.findFragmentByTag("fragment1");
+        fragment1.refreshList(rssId);
     }
 
     @Override
@@ -113,11 +145,27 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
         {
             return;
         }
-        Long rssId = data.getLongExtra("rssId", 0);
-        MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
-        SQLiteDatabase db = myDBHelper.getReadableDatabase();
-        myDBHelper.getAllNewsFromRss(db, rssId);
-
-
+        currentRssId = data.getLongExtra("rssId", 0);
+        callRefresh(currentRssId);
     }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        //Проверка на первый запуск. Заполняем источниками RSS
+
+        if (prefs.getBoolean("firstrun", true))
+        {
+            MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
+            SQLiteDatabase db = myDBHelper.getWritableDatabase();
+            myDBHelper.addRSS(db, new RSS("http://nv.ua/xml/rss.html", "http://nv.ua/xml/rss.html"));
+            myDBHelper.addRSS(db, new RSS("http://itc.ua/feed/", "http://itc.ua/feed/"));
+            myDBHelper.addRSS(db, new RSS("https://3dnews.ru/news/rss/", "https://3dnews.ru/news/rss/"));
+
+            prefs.edit().putBoolean("firstrun", false).commit();
+        }
+    }
+
 }

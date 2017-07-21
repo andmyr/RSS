@@ -1,6 +1,7 @@
 package ua.od.and.rss.activities;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -50,7 +51,12 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
             {
-
+                MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
+                SQLiteDatabase db = myDBHelper.getReadableDatabase();
+                Intent answerIntent = new Intent();
+                answerIntent.putExtra("rssId", myDBHelper.getRSSIdByLink(db, allRRSList.get(i)));
+                setResult(RESULT_OK, answerIntent);
+                finish();
             }
         });
 
