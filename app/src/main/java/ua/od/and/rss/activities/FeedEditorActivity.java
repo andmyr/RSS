@@ -40,8 +40,8 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
 
         Button btnAddRSS = (Button) findViewById(R.id.btnAddRSS);
         btnAddRSS.setOnClickListener(this);
-        Button btnDeleteRSS = (Button) findViewById(R.id.btnDeleteRSS);
-        btnDeleteRSS.setOnClickListener(this);
+        /*Button btnDeleteRSS = (Button) findViewById(R.id.btnDeleteRSS);
+        btnDeleteRSS.setOnClickListener(this);*/
         allRRSList = myDBHelper.getAllRRSLinks(db);
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, allRRSList);
         listView.setAdapter(adapter);
@@ -61,9 +61,9 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
         });
 
         //Для тестирования
-        etRSSLink = (EditText) findViewById(R.id.etRSSLink);
+       /* etRSSLink = (EditText) findViewById(R.id.etRSSLink);
         Button btnLoadRSS = (Button) findViewById(R.id.btnLoadRSS);
-        btnLoadRSS.setOnClickListener(this);
+        btnLoadRSS.setOnClickListener(this);*/
     }
 
     @Override
@@ -71,14 +71,14 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
     {
         switch (view.getId())
         {
-            case R.id.btnLoadRSS:
+           /* case R.id.btnLoadRSS:
             {
                 String strUrl;
                 strUrl = etRSSLink.getText().toString();
                 RetrieveFeedTask retrieveFeedTask = new RetrieveFeedTask(this, strUrl);
                 retrieveFeedTask.execute();
                 break;
-            }
+            }*/
             case R.id.btnAddRSS:
             {
                 AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -118,14 +118,13 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
                 alertDialog.show();
                 break;
             }
-            case R.id.btnDeleteRSS:
+            /*case R.id.btnDeleteRSS:
             {
                 break;
-            }
+            }*/
 
             default:
                 break;
         }
-
     }
 }

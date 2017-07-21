@@ -46,7 +46,7 @@ public class RetrieveFeedTask extends AsyncTask
     protected Object doInBackground(Object[] objects)
     {
         if (strUrl.length() > 0)
-        {
+        { //кусок кода для тестирования
             try
             {
                 RssParse(new URL(strUrl), 1);
