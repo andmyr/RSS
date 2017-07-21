@@ -7,10 +7,10 @@ package ua.od.and.rss.classes;
 public class OneNews
 {
     private long id;
-    private long listId;
-    private String title;
-    private String link;
-    private String description;
+    private final long listId;
+    private final String title;
+    private final String link;
+    private final String description;
     private String date;
 
     public OneNews(long listId, String title, String link, String description, String date)
@@ -20,6 +20,15 @@ public class OneNews
         this.link = link;
         this.description = description;
         this.date = date;
+    }
+
+    public OneNews(long id, long listId, String title, String link, String description)
+    {
+        this.id = id;
+        this.listId = listId;
+        this.title = title;
+        this.link = link;
+        this.description = description;
     }
 
     public long getId()

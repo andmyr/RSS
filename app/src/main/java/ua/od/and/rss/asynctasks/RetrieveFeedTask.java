@@ -3,7 +3,6 @@ package ua.od.and.rss.asynctasks;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
-import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -13,8 +12,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 import ua.od.and.rss.classes.OneNews;
+import ua.od.and.rss.classes.RSS;
 import ua.od.and.rss.database.MyDBHelper;
 
 /**
@@ -24,16 +25,58 @@ import ua.od.and.rss.database.MyDBHelper;
 public class RetrieveFeedTask extends AsyncTask
 {
     private final Context context;
-    private final URL url;
+    private final String strUrl;
 
-    public RetrieveFeedTask(Context context, URL url)
+    /**
+     * Загрузка новостей в базу в AsyncTask. Перед загрузкой удаляем старые новости.
+     *
+     * @param context
+     * @param strUrl     Адрес RSS,
+     *                   если длина строки 0 - получаем из базы все ссылки на RSS и по всем загружаем в базу новости
+     *                   иначе загружаем одну ленту из url
+     */
+
+    public RetrieveFeedTask(Context context, String strUrl)
     {
         this.context = context;
-        this.url = url;
+        this.strUrl = strUrl;
     }
 
     @Override
     protected Object doInBackground(Object[] objects)
+    {
+        if (strUrl.length() > 0)
+        {
+            try
+            {
+                RssParse(new URL(strUrl), 1);
+            } catch (MalformedURLException e)
+            {
+                e.printStackTrace();
+            }
+        } else
+        {
+            MyDBHelper myDBHelper = new MyDBHelper(context);
+            SQLiteDatabase db = myDBHelper.getWritableDatabase();
+            ArrayList<RSS> rssList = myDBHelper.getAllRRS(db);
+
+            for (RSS item : rssList)
+            {
+                try
+                {
+                    myDBHelper.deleteDataFromRSS(db, item.getId());
+                    RssParse(new URL(item.getLink()), item.getId());
+                } catch (MalformedURLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private void RssParse(URL url, long rssId)
     {
         try
         {
@@ -41,20 +84,10 @@ public class RetrieveFeedTask extends AsyncTask
             factory.setNamespaceAware(false);
             XmlPullParser xpp = factory.newPullParser();
 
-            // We will get the XML from an input stream
             xpp.setInput(getInputStream(url), "UTF_8");
 
-        /* We will parse the XML content looking for the "<title>" tag which appears inside the "<item>" tag.
-         * However, we should take in consideration that the rss feed name also is enclosed in a "<title>" tag.
-         * As we know, every feed begins with these lines: "<channel><title>Feed_Name</title>...."
-         * so we should skip the "<title>" tag which is a child of "<channel>" tag,
-         * and take in consideration only "<title>" tag which is a child of "<item>"
-         *
-         * In order to achieve this, we will make use of a boolean variable.
-         */
             boolean insideItem = false;
 
-            // Returns the type of current event: START_TAG, END_TAG, etc..
             int eventType = xpp.getEventType();
             String headline = "";
             String link = "";
@@ -71,25 +104,25 @@ public class RetrieveFeedTask extends AsyncTask
                     {
                         if (insideItem)
                         {
-                            headline = xpp.nextText(); //extract the headline
+                            headline = xpp.nextText();
                         }
                     } else if (xpp.getName().equalsIgnoreCase("link"))
                     {
                         if (insideItem)
                         {
-                            link = xpp.nextText(); //extract the link of article
+                            link = xpp.nextText();
                         }
                     } else if (xpp.getName().equalsIgnoreCase("description"))
                     {
                         if (insideItem)
                         {
-                            description = xpp.nextText(); //extract the link of article
+                            description = xpp.nextText();
                         }
                     } else if (xpp.getName().equalsIgnoreCase("pubDate"))
                     {
                         if (insideItem)
                         {
-                            pubDate = xpp.nextText(); //extract the link of article
+                            pubDate = xpp.nextText();
                         }
                     }
                 } else if (eventType == XmlPullParser.END_TAG && xpp.getName().equalsIgnoreCase("item"))
@@ -100,16 +133,15 @@ public class RetrieveFeedTask extends AsyncTask
                 {//Запись новости в базу
                     MyDBHelper myDBHelper = new MyDBHelper(context);
                     SQLiteDatabase db = myDBHelper.getWritableDatabase();
-                    myDBHelper.addOneNews(db, new OneNews(0, headline, link, description, pubDate));
+                    myDBHelper.addOneNews(db, new OneNews(rssId, headline, link, description, pubDate));
                     headline = "";
                     link = "";
                     description = "";
                     pubDate = "";
                 }
-                eventType = xpp.next(); //move to next element
+                eventType = xpp.next();
             }
 
-            Toast.makeText(context, "Загрузка завершена", Toast.LENGTH_LONG).show();
         } catch (MalformedURLException e)
         {
             e.printStackTrace();
@@ -120,11 +152,9 @@ public class RetrieveFeedTask extends AsyncTask
         {
             e.printStackTrace();
         }
-
-        return null;
     }
 
-    public InputStream getInputStream(URL url)
+    private InputStream getInputStream(URL url)
     {
         try
         {

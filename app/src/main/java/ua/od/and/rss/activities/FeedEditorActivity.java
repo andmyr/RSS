@@ -6,14 +6,13 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 import ua.od.and.rss.R;
@@ -26,8 +25,6 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
 
     private EditText etRSSLink;
     private ArrayAdapter<String> adapter;
-    private Button btnAddRSS;
-    private Button btnDeleteRSS;
     private ArrayList<String> allRRSList;
 
     @Override
@@ -40,13 +37,22 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
         MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
         SQLiteDatabase db = myDBHelper.getReadableDatabase();
 
-        btnAddRSS = (Button) findViewById(R.id.btnAddRSS);
+        Button btnAddRSS = (Button) findViewById(R.id.btnAddRSS);
         btnAddRSS.setOnClickListener(this);
-        btnDeleteRSS = (Button) findViewById(R.id.btnDeleteRSS);
+        Button btnDeleteRSS = (Button) findViewById(R.id.btnDeleteRSS);
         btnDeleteRSS.setOnClickListener(this);
-        allRRSList = myDBHelper.getAllRRS(db);
+        allRRSList = myDBHelper.getAllRRSLinks(db);
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, allRRSList);
         listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
+            {
+
+            }
+        });
 
         //Для тестирования
         etRSSLink = (EditText) findViewById(R.id.etRSSLink);
@@ -61,15 +67,9 @@ public class FeedEditorActivity extends AppCompatActivity implements View.OnClic
         {
             case R.id.btnLoadRSS:
             {
-                URL url = null;
-                try
-                {
-                    url = new URL(etRSSLink.getText().toString());
-                } catch (MalformedURLException e)
-                {
-                    e.printStackTrace();
-                }
-                RetrieveFeedTask retrieveFeedTask = new RetrieveFeedTask(this, url);
+                String strUrl;
+                strUrl = etRSSLink.getText().toString();
+                RetrieveFeedTask retrieveFeedTask = new RetrieveFeedTask(this, strUrl);
                 retrieveFeedTask.execute();
                 break;
             }

@@ -7,8 +7,8 @@ package ua.od.and.rss.classes;
 public class RSS
 {
     private long id;
-    private String name;
-    private String link;
+    private final String name;
+    private final String link;
 
     public RSS(String name, String link)
     {
@@ -19,6 +19,11 @@ public class RSS
     public long getId()
     {
         return id;
+    }
+
+    public void setId(long id)
+    {
+        this.id = id;
     }
 
     public String getName()

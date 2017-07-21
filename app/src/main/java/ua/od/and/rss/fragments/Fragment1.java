@@ -1,36 +1,32 @@
 package ua.od.and.rss.fragments;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import ua.od.and.rss.R;
+import ua.od.and.rss.adapters.MyAdapter;
+import ua.od.and.rss.classes.OneNews;
+import ua.od.and.rss.classes.RSS;
+import ua.od.and.rss.database.MyDBHelper;
 
 
-public class Fragment1 extends ListFragment// Fragment implements
-        // View.OnClickListener
+public class Fragment1 extends ListFragment
 {
-    final String[] vegetables = new String[]{"Картошка", "Капуста", "Морковка", "Помидор", "Буряк", "Редиска", "Укроп", "Еще укроп", "Кабачек", "Перец",
-            "Баклажан", "Хрень непонятная"};
+    private ArrayList<OneNews> newsList;
+    private MyAdapter adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        View rootView = inflater.inflate(R.layout.listfragment, null);
-
-        /*
-         * Button button1 = (Button) rootView.findViewById(R.id.button1); Button
-         * button2 = (Button) rootView.findViewById(R.id.button2); Button
-         * button3 = (Button) rootView.findViewById(R.id.button3);
-         * 
-         * button1.setOnClickListener(this); button2.setOnClickListener(this);
-         * button3.setOnClickListener(this);
-         */
-        return rootView;
+        return inflater.inflate(R.layout.listfragment, null);
     }
 
     @Override
@@ -38,7 +34,19 @@ public class Fragment1 extends ListFragment// Fragment implements
     {
         super.onActivityCreated(savedInstanceState);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_activated_1, vegetables);
+        MyDBHelper myDBHelper = new MyDBHelper(getContext());
+        SQLiteDatabase db = myDBHelper.getReadableDatabase();
+        ArrayList<RSS> rssList = myDBHelper.getAllRRS(db);
+        if (rssList.size() < 1)
+        {
+            Toast.makeText(getContext(), "Добавьте хотя бы один RSS-лист", Toast.LENGTH_SHORT).show();
+            newsList = myDBHelper.getAllNewsFromRss(db, 0);
+        } else
+        {
+            newsList = myDBHelper.getAllNewsFromRss(db, rssList.get(0).getId());
+        }
+
+        adapter = new MyAdapter(newsList, getContext());
         setListAdapter(adapter);
     }
 
@@ -47,33 +55,20 @@ public class Fragment1 extends ListFragment// Fragment implements
     {
         super.onListItemClick(l, v, position, id);
         OnSelectedButtonListener listener = (OnSelectedButtonListener) getActivity();
-        listener.onButtonSelected(position);
+        long id1 = newsList.get(position).getId();
+        listener.onButtonSelected(id1);
     }
 
-    // @Override
-    public void onClick(View v)
+    public void refreshList()
     {
-        int buttonIndex = translateIdToIndex(v.getId());
-
-        OnSelectedButtonListener listener = (OnSelectedButtonListener) getActivity();
-        listener.onButtonSelected(buttonIndex);
-
-        // Toast.makeText(getActivity(), String.valueOf(buttonIndex),
-        // Toast.LENGTH_SHORT).show();
-    }
-
-    int translateIdToIndex(int id)
-    {
-        /*
-         * int index = -1; switch (id) { case R.id.button1: index = 1; break;
-         * case R.id.button2: index = 2; break; case R.id.button3: index = 3;
-         * break; }
-         */
-        return id;
+        MyDBHelper myDBHelper = new MyDBHelper(getContext());
+        SQLiteDatabase db = myDBHelper.getReadableDatabase();
+        newsList = myDBHelper.getAllNewsFromRss(db, 0);
+        adapter.notifyDataSetChanged();
     }
 
     public interface OnSelectedButtonListener
     {
-        void onButtonSelected(int buttonIndex);
+        void onButtonSelected(long buttonIndex);
     }
 }

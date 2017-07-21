@@ -23,8 +23,8 @@ public class MyDBHelper extends SQLiteOpenHelper
     public void onCreate(SQLiteDatabase db)
     {
         String sql = "CREATE TABLE '" + DBContract.Tables.RSS_LIST + "' ( `" + DBContract.RSS_list.ID_COLUMN + "` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT " +
-                "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "UNIQUE, `" + DBContract.RSS_list.LINK_COLUMN + "` TEXT NOT NULL, `" + DBContract.RSS_list
-                .NAME_COLUMN + "`" + " " + "TEXT NOT" + " NULL" + " " + "UNIQUE )";
+                "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "" + "UNIQUE, `" + DBContract.RSS_list.LINK_COLUMN
+                + "` " + "TEXT " + "NOT " + "NULL, " + "`" + DBContract.RSS_list.NAME_COLUMN + "`" + " " + "TEXT NOT" + " NULL" + " " + "UNIQUE )";
         db.execSQL(sql);
 
         sql = "CREATE TABLE '" + DBContract.Tables.RSS_DATA + "' ( `" + DBContract.RSS_data.ID_COLUMN + "` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT" + " "
@@ -41,8 +41,8 @@ public class MyDBHelper extends SQLiteOpenHelper
 
     public void clearAll(SQLiteDatabase db)
     {
-        db.execSQL("DELETE FROM " + DBContract.Tables.RSS_DATA + " WHERE *");
-        db.execSQL("DELETE FROM " + DBContract.Tables.RSS_LIST + " WHERE *");
+        db.execSQL("DELETE FROM " + DBContract.Tables.RSS_DATA);
+        db.execSQL("DELETE FROM " + DBContract.Tables.RSS_LIST);
     }
 
     public void deleteRSS(SQLiteDatabase db, long rssId)
@@ -75,25 +75,46 @@ public class MyDBHelper extends SQLiteOpenHelper
         return db.insert(DBContract.Tables.RSS_DATA, null, contentValues);
     }
 
-    public ArrayList<String> getAllRRS(SQLiteDatabase db)
+    public ArrayList<String> getAllRRSLinks(SQLiteDatabase db)
     {
-        String[] name = {DBContract.RSS_list.NAME_COLUMN};
+        String[] name = {DBContract.RSS_list.LINK_COLUMN};
         Cursor cursor = db.query(DBContract.Tables.RSS_LIST, name, null, null, null, null, null);
-        int nameColumnIndex = cursor.getColumnIndex(DBContract.RSS_list.NAME_COLUMN);
+        int linkColumnIndex = cursor.getColumnIndex(DBContract.RSS_list.LINK_COLUMN);
         ArrayList<String> list = new ArrayList<>();
         while (cursor.moveToNext())
         {
-            list.add(cursor.getString(nameColumnIndex));
+            list.add(cursor.getString(linkColumnIndex));
         }
+        cursor.close();
         return list;
     }
 
+    public ArrayList<RSS> getAllRRS(SQLiteDatabase db)
+    {
+        String[] name = {DBContract.RSS_list.ID_COLUMN, DBContract.RSS_list.NAME_COLUMN, DBContract.RSS_list.LINK_COLUMN,};
+        Cursor cursor = db.query(DBContract.Tables.RSS_LIST, name, null, null, null, null, null);
+        int idColumnIndex = cursor.getColumnIndex(DBContract.RSS_list.ID_COLUMN);
+        int nameColumnIndex = cursor.getColumnIndex(DBContract.RSS_list.NAME_COLUMN);
+        int linkColumnIndex = cursor.getColumnIndex(DBContract.RSS_list.LINK_COLUMN);
+        ArrayList<RSS> list = new ArrayList<>();
+        while (cursor.moveToNext())
+        {
+            RSS rss = new RSS(cursor.getString(nameColumnIndex), cursor.getString(linkColumnIndex));
+            rss.setId(cursor.getLong(idColumnIndex));
+            list.add(rss);
+        }
+        cursor.close();
+        return list;
+    }
+
+
     public ArrayList<OneNews> getAllNewsFromRss(SQLiteDatabase db, long rssId)
     {
-        String[] columns = {DBContract.RSS_data.LIST_ID_COLUMN, DBContract.RSS_data.TITLE_COLUMN, DBContract.RSS_data.LINK_COLUMN, DBContract.RSS_data
-                .DESCRIPTION_COLUMN};
+        String[] columns = {DBContract.RSS_data.ID_COLUMN, DBContract.RSS_data.LIST_ID_COLUMN, DBContract.RSS_data.TITLE_COLUMN, DBContract.RSS_data
+                .LINK_COLUMN, DBContract.RSS_data.DESCRIPTION_COLUMN};
         String where = DBContract.RSS_data.LIST_ID_COLUMN + " = " + rssId;
         Cursor cursor = db.query(DBContract.Tables.RSS_DATA, columns, where, null, null, null, null);
+        int IdColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.ID_COLUMN);
         int listIdColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.LIST_ID_COLUMN);
         int titleColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.TITLE_COLUMN);
         int linkColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.LINK_COLUMN);
@@ -101,10 +122,40 @@ public class MyDBHelper extends SQLiteOpenHelper
         ArrayList<OneNews> list = new ArrayList<>();
         while (cursor.moveToNext())
         {
-            list.add(new OneNews(cursor.getLong(listIdColumnIndex), cursor.getString(titleColumnIndex), cursor.getString(linkColumnIndex), cursor.getString
-                    (descriptionColumnIndex), "data"));
+            OneNews news = new OneNews(cursor.getLong(IdColumnIndex), cursor.getLong(listIdColumnIndex), cursor.getString(titleColumnIndex), cursor.getString
+                    (linkColumnIndex), cursor.getString(descriptionColumnIndex));
+            list.add(news);
         }
+        cursor.close();
         return list;
     }
+
+    public OneNews getNewsById(SQLiteDatabase db, long newsId)
+    {
+        String[] columns = {DBContract.RSS_data.ID_COLUMN, DBContract.RSS_data.LIST_ID_COLUMN, DBContract.RSS_data.TITLE_COLUMN, DBContract.RSS_data
+                .LINK_COLUMN, DBContract.RSS_data.DESCRIPTION_COLUMN};
+        String where = DBContract.RSS_data.ID_COLUMN + " = " + newsId;
+        Cursor cursor = db.query(DBContract.Tables.RSS_DATA, columns, where, null, null, null, null);
+        int IdColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.ID_COLUMN);
+        int listIdColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.LIST_ID_COLUMN);
+        int titleColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.TITLE_COLUMN);
+        int linkColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.LINK_COLUMN);
+        int descriptionColumnIndex = cursor.getColumnIndex(DBContract.RSS_data.DESCRIPTION_COLUMN);
+        ArrayList<OneNews> list = new ArrayList<>();
+        while (cursor.moveToNext())
+        {
+            list.add(new OneNews(cursor.getLong(IdColumnIndex), cursor.getLong(listIdColumnIndex), cursor.getString(titleColumnIndex), cursor.getString
+                    (linkColumnIndex), cursor.getString(descriptionColumnIndex)));
+        }
+        cursor.close();
+        if (list.size() > 0)
+        {
+            return list.get(0);
+        } else
+        {
+            return null;
+        }
+    }
+
 
 }

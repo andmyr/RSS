@@ -1,6 +1,7 @@
 package ua.od.and.rss.activities;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -10,6 +11,9 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import ua.od.and.rss.R;
+import ua.od.and.rss.Utils.NetStatus;
+import ua.od.and.rss.asynctasks.RetrieveFeedTask;
+import ua.od.and.rss.database.MyDBHelper;
 import ua.od.and.rss.fragments.Fragment1;
 import ua.od.and.rss.fragments.Fragment2;
 
@@ -34,15 +38,11 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment2 fragment2 = (Fragment2) fragmentManager.findFragmentById(R.id.fragment2);
         mIsDynamic = (fragment2 == null) || (!fragment2.isInLayout());
-        //Toast.makeText(getApplicationContext(), mIsDynamic + "", Toast.LENGTH_SHORT).show();
         if ((mIsDynamic) && (fragmentManager.findFragmentByTag("fragment1") == null))
         {
-            // начинаем транзакцию
             FragmentTransaction ft = fragmentManager.beginTransaction();
-            // Создаем и добавляем первый фрагмент
             Fragment1 fragment1 = new Fragment1();
             ft.add(R.id.flFragmentContainer1, fragment1, "fragment1");
-            // Подтверждаем операцию
             ft.commit();
         }
     }
@@ -54,15 +54,26 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
         switch (id)
         {
             case R.id.action_refresh:
-                Toast.makeText(this, "Заготовка под обновление RSS ленты", Toast.LENGTH_SHORT).show();
+                if (!NetStatus.getInstance(this).isOnline())
+                {
+                    Toast.makeText(this, "Отсутствует подключение к сети.", Toast.LENGTH_SHORT).show();
+                    return super.onOptionsItemSelected(item);
+                }
+                RetrieveFeedTask retrieveFeedTask = new RetrieveFeedTask(this, ""); //Пустая строка для того чтобы были обновлены все RSS
+                retrieveFeedTask.execute();
+
                 return true;
             case R.id.action_rss_list:
                 //Toast.makeText(this, "Заготовка под редактор списка RSS", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, FeedEditorActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, 1);
                 return true;
             case R.id.action_clear_all:
-                Toast.makeText(this, "Заготовка под очистку ленты", Toast.LENGTH_SHORT).show();
+                MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
+                SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                myDBHelper.clearAll(db);
+                Toast.makeText(this, "Все удалено", Toast.LENGTH_SHORT).show();
+                //TODO Обновление списка новостей
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -70,22 +81,17 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
     }
 
     @Override
-    public void onButtonSelected(int buttonIndex)
+    public void onButtonSelected(long buttonIndex)
     {
-        // подключаем FragmentManager
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment2 fragment2;
-
-        // Если фрагмент недоступен
         if (mIsDynamic)
         {
-            // Динамическое переключение на другой фрагмент
             FragmentTransaction ft = fragmentManager.beginTransaction();
             fragment2 = new Fragment2();
 
-            // Подготавливаем аргументы
             Bundle args = new Bundle();
-            args.putInt(Fragment2.BUTTON_INDEX, buttonIndex);
+            args.putLong(Fragment2.BUTTON_INDEX, buttonIndex);
             fragment2.setArguments(args);
 
             ft.replace(R.id.flFragmentContainer1, fragment2, "fragment2");
@@ -95,9 +101,23 @@ public class MainActivity extends AppCompatActivity implements Fragment1.OnSelec
             ft.commit();
         } else
         {
-            // Если фрагмент доступен
             fragment2 = (Fragment2) fragmentManager.findFragmentById(R.id.fragment2);
             fragment2.setDescription(buttonIndex);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (data == null)
+        {
+            return;
+        }
+        Long rssId = data.getLongExtra("rssId", 0);
+        MyDBHelper myDBHelper = new MyDBHelper(getApplicationContext());
+        SQLiteDatabase db = myDBHelper.getReadableDatabase();
+        myDBHelper.getAllNewsFromRss(db, rssId);
+
+
     }
 }

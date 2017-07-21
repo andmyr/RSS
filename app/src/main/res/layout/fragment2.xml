@@ -5,11 +5,23 @@
               android:orientation="vertical" >
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Описание овоща"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        android:text="Заголовок новости"
+        android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Описание новости"/>
+
+    <TextView
+        android:id="@+id/tvLink"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ссылка на новость"/>
 
 
 </LinearLayout>
